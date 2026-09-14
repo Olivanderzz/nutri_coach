@@ -140,7 +140,7 @@ REGLA:blancas~25%·rojas~30%·huevo=6.5g·lentejas½t=9g·salmón170g=33.6g·pol
 Sin azúcar/frituras/harinas. Verduras=base. Grasas buenas siempre. Gelatina sin sabor permitida.
 JSON sin markdown:{"type":"meal"|"workout"|"social"|"water"|"question"|"other","summary":"≤50chars","kcal_est":N,"prot_est":N,"ml":N,"feedback":"1-2 frases español"}`;
   const msgs=[...hist.slice(-4).map(m=>({role:m.r,content:m.c})),{role:"user",content:msg}];
-  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:400,system:sys,messages:msgs})});
+  const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({      model:"claude-sonnet-4-5",max_tokens:400,system:sys,messages:msgs})});
   const data=await res.json();
   const txt=(data.content||[]).map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
   try{return JSON.parse(txt);}catch{return{type:"other",feedback:txt};}
@@ -233,6 +233,12 @@ function App(){
   useEffect(()=>{if(chatRef.current)chatRef.current.scrollTop=chatRef.current.scrollHeight;},[chat,busy]);
 
   const TK=tk(),todayLogs=logs[TK]||[],todayWater=water[TK]||0,off=prof.vS-8,obj=OBJS[prof.objetivo],dayData=PLAN[diaIdx];
+  // Recalcula horarios del plan según ventana del perfil
+  function planTime(diaI, comidaI){
+    const bases=[["08:00","12:00","14:00","16:30","18:00"],["08:00","12:00","14:00","16:30","18:00"],["08:00","12:00","14:00","16:30","18:00"],["08:00","13:00","16:00","18:00"],["08:00","12:00","14:00","16:30","18:00"],["08:00","12:00","14:00","16:30","18:00"],["08:00","12:00","15:00","18:00"]];
+    const base=bases[diaI]?.[comidaI]||"08:00";
+    return shiftT(base, prof.vS-8);
+  }
 
   function addWater(ml){setWater(p=>({...p,[TK]:(p[TK]||0)+ml}));}
 
@@ -333,6 +339,7 @@ function App(){
                 <div style={{display:"flex",gap:3,alignItems:"center"}}>
                   {prot>0&&<span style={{fontSize:9,color:c.teT,background:c.teB,padding:"2px 5px",borderRadius:9,fontWeight:500}}>{prot}g</span>}
                   {kcal>0&&<span style={{fontSize:9,color:c.sgT,background:c.sgB,padding:"2px 5px",borderRadius:9,fontWeight:500}}>{kcal}kcal</span>}
+                  <span style={{fontSize:9,color:c.ts,fontWeight:500,marginLeft:2}}>{planTime(diaIdx,i)}</span>
                 </div>
               </div>
               <ul style={{margin:0,padding:"6px 11px 8px 24px",fontSize:11,color:c.ts,lineHeight:1.8}}>{items.map((it,j)=><li key={j}>{it}</li>)}</ul>
