@@ -335,11 +335,11 @@ function App(){
           <div style={{display:"flex",flexDirection:"column",gap:7}}>
             {dayData.c.map(([kcal,prot,ic,nom,items],i)=><div key={i} style={{background:c.bgC,border:`0.5px solid ${c.bo}`,borderRadius:11,overflow:"hidden"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 11px",background:c.bgM}}>
-                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:16}}>{ic}</span><span style={{fontWeight:500,fontSize:12}}>{nom}</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:16}}>{ic}</span><span style={{fontWeight:500,fontSize:12}}>{nom.replace(/^\d{2}:\d{2}\s*[—-]\s*/,"")}</span></div>
                 <div style={{display:"flex",gap:3,alignItems:"center"}}>
                   {prot>0&&<span style={{fontSize:9,color:c.teT,background:c.teB,padding:"2px 5px",borderRadius:9,fontWeight:500}}>{prot}g</span>}
                   {kcal>0&&<span style={{fontSize:9,color:c.sgT,background:c.sgB,padding:"2px 5px",borderRadius:9,fontWeight:500}}>{kcal}kcal</span>}
-                  <span style={{fontSize:9,color:c.ts,fontWeight:500,marginLeft:2}}>{planTime(diaIdx,i)}</span>
+                  <span style={{fontSize:10,color:c.ts,fontWeight:600,marginLeft:2,background:c.bgS,padding:"2px 5px",borderRadius:8}}>{planTime(diaIdx,i)}</span>
                 </div>
               </div>
               <ul style={{margin:0,padding:"6px 11px 8px 24px",fontSize:11,color:c.ts,lineHeight:1.8}}>{items.map((it,j)=><li key={j}>{it}</li>)}</ul>
