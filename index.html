@@ -30,7 +30,7 @@ const{useState,useEffect,useRef}=React;
 const L={bg:"#FAF6EE",bgS:"#F2EBDD",bgC:"#FFFFFF",bgM:"#F5EFE2",tx:"#2B2620",ts:"#6F6657",tt:"#A89E89",bo:"#E5DCC9",bs:"#EDE5D2",sg:"#5A7A5C",sgB:"#E8EFE5",sgT:"#3F5A41",te:"#C76E4A",teB:"#FBE8DD",teT:"#8A4A30",am:"#B07D28",amB:"#F7E8C8",amT:"#7A5717",wa:"#4A90C2",waB:"#E0EBF5",waT:"#2C5A7F"};
 const D={bg:"#1B1814",bgS:"#252118",bgC:"#2A251F",bgM:"#221E18",tx:"#EFEAE0",ts:"#B5AD9D",tt:"#7A7367",bo:"#3D362D",bs:"#332E26",sg:"#7FA081",sgB:"#2E3A2E",sgT:"#A8C0A5",te:"#E08868",teB:"#3D2A22",teT:"#E8A88A",am:"#D9A347",amB:"#3A2F1A",amT:"#E8C275",wa:"#7AAFD0",waB:"#1F2D3A",waT:"#9FC5DE"};
 
-const DP={peso:95,altura:177,objetivo:"perder",vS:8,vD:10,posq:true};
+const DP={peso:95,altura:177,objetivo:"perder",vS:8,vD:12};
 const OBJS={perder:{label:"Perder grasa",icon:"🔥",col:"te"},ganar:{label:"Ganar músculo",icon:"💪",col:"am"},mantener:{label:"Mantener peso",icon:"⚖️",col:"sg"}};
 
 const PLAN=[
@@ -126,6 +126,22 @@ const BASE_T=[["08:00","12:00","14:00","16:30","18:00"],["08:00","12:00","14:00"
 const DIAS_S=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 const DIAS_F=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
+// Calcula porciones según peso y objetivo (Jaramillo Cap. 10)
+// Proteína: perder=1.6g/kg · mantener=1.8g/kg · ganar=2.2g/kg
+// Carnes blancas 25% proteína efectiva · rojas 30%
+function calcProt(peso,objetivo){
+  const factor={perder:1.6,mantener:1.8,ganar:2.2};
+  return Math.round(peso*(factor[objetivo]||1.8));
+}
+function protPorComida(peso,objetivo,comidas=5){
+  return Math.round(calcProt(peso,objetivo)/comidas);
+}
+// Gramos de carne necesarios para obtener X gramos de proteína
+function carneParaProt(protG,tipo="blanca"){
+  const pct=tipo==="roja"?0.30:0.25;
+  return Math.round(protG/pct);
+}
+
 function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
 function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function tk(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
@@ -176,10 +192,11 @@ function ProfEditor({c,p,onSave,onClose}){
           <div style={{display:"flex",gap:4,flex:1}}>{[8,9,10].map(h=><button key={h} onClick={()=>setD({...d,vD:h})} style={{flex:1,padding:"5px 0",fontSize:11,fontWeight:500,borderRadius:6,border:`0.5px solid ${d.vD===h?c.sg:c.bo}`,background:d.vD===h?c.sg:"transparent",color:d.vD===h?"#fff":c.ts,cursor:"pointer"}}>{h}h</button>)}</div>
         </div>
       </div>
-      <label style={{display:"flex",alignItems:"center",gap:8,padding:"9px 12px",background:c.bgS,borderRadius:10,cursor:"pointer",marginBottom:14}}>
-        <input type="checkbox" checked={d.posq} onChange={e=>setD({...d,posq:e.target.checked})} style={{accentColor:c.sg,width:16,height:16}}/>
-        <span style={{fontSize:12,color:c.tx}}>En recuperación posquirúrgica</span>
-      </label>
+      <div style={{background:c.teB,borderRadius:10,padding:"10px 12px",marginBottom:14}}>
+        <p style={{margin:0,fontSize:11,color:c.teT}}>🥩 Meta proteína diaria (Jaramillo Cap. 10)</p>
+        <p style={{margin:"4px 0 0",fontSize:16,fontWeight:500,color:c.teT}}>{calcProt(d.peso,d.objetivo)}g / día</p>
+        <p style={{margin:"2px 0 0",fontSize:9,color:c.teT,opacity:.8}}>~{protPorComida(d.peso,d.objetivo)}g por comida · {d.peso}kg × {d.objetivo==="perder"?"1.6":d.objetivo==="ganar"?"2.2":"1.8"}g</p>
+      </div>
       <div style={{display:"flex",gap:8}}>
         <button onClick={onClose} style={{flex:1,padding:10,fontSize:13,fontWeight:500,borderRadius:10,border:`0.5px solid ${c.bo}`,background:"transparent",color:c.ts,cursor:"pointer"}}>Cancelar</button>
         <button onClick={()=>onSave(d)} style={{flex:1,padding:10,fontSize:13,fontWeight:500,borderRadius:10,border:"none",background:c.sg,color:"#fff",cursor:"pointer"}}>Guardar</button>
@@ -328,8 +345,8 @@ function App(){
           <div style={{background:c.sgB,borderRadius:10,padding:"7px 11px",marginBottom:11,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div><p style={{margin:0,fontSize:13,fontWeight:500,color:c.sgT}}>{DIAS_F[diaIdx]}{diaIdx===todayIdx&&<span style={{fontSize:10,marginLeft:6,opacity:.7}}>· hoy</span>}</p><p style={{margin:"1px 0 0",fontSize:10,color:c.sgT}}>{dayData.tag}</p></div>
             <div style={{textAlign:"right"}}>
-              <span style={{fontSize:10,fontWeight:500,color:c.teT,background:c.teB,padding:"2px 6px",borderRadius:10,display:"block",marginBottom:3}}>~{dayData.c.reduce((s,m)=>s+(m[1]||0),0)}g prot.</span>
-              <span style={{fontSize:10,fontWeight:500,color:c.sgT,background:"rgba(255,255,255,.5)",padding:"2px 6px",borderRadius:10}}>~{dayData.c.reduce((s,m)=>s+(m[0]||0),0)} kcal</span>
+              <span style={{fontSize:10,fontWeight:500,color:c.teT,background:c.teB,padding:"2px 6px",borderRadius:10,display:"block",marginBottom:3}}>Meta: {calcProt(prof.peso,prof.objetivo)}g prot./día</span>
+              <span style={{fontSize:10,fontWeight:500,color:c.sgT,background:"rgba(255,255,255,.5)",padding:"2px 6px",borderRadius:10}}>~{protPorComida(prof.peso,prof.objetivo)}g por comida</span>
             </div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -345,7 +362,7 @@ function App(){
               <ul style={{margin:0,padding:"6px 11px 8px 24px",fontSize:11,color:c.ts,lineHeight:1.8}}>{items.map((it,j)=><li key={j}>{it}</li>)}</ul>
             </div>)}
           </div>
-          {dayData.e&&<div style={{marginTop:9,background:c.teB,borderRadius:9,padding:"8px 11px",fontSize:11,color:c.teT,display:"flex",gap:6}}><span>🏃</span><span>Come post-entreno en los primeros 30-45 min.{prof.posq&&" Intensidad moderada."}</span></div>}
+          {dayData.e&&<div style={{marginTop:9,background:c.teB,borderRadius:9,padding:"8px 11px",fontSize:11,color:c.teT,display:"flex",gap:6}}><span>🏃</span><span>Come post-entreno en los primeros 30-45 min.</span></div>}
         </div>}
 
         {tab==="cocina"&&<div>
