@@ -25,7 +25,7 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const{useState,useEffect,useRef}=React;
+const{useState,useEffect}=React;
 
 const L={bg:"#FAF6EE",bgS:"#F2EBDD",bgC:"#FFFFFF",bgM:"#F5EFE2",tx:"#2B2620",ts:"#6F6657",tt:"#A89E89",bo:"#E5DCC9",bs:"#EDE5D2",sg:"#5A7A5C",sgB:"#E8EFE5",sgT:"#3F5A41",te:"#C76E4A",teB:"#FBE8DD",teT:"#8A4A30",am:"#B07D28",amB:"#F7E8C8",amT:"#7A5717",wa:"#4A90C2",waB:"#E0EBF5",waT:"#2C5A7F"};
 const D={bg:"#1B1814",bgS:"#252118",bgC:"#2A251F",bgM:"#221E18",tx:"#EFEAE0",ts:"#B5AD9D",tt:"#7A7367",bo:"#3D362D",bs:"#332E26",sg:"#7FA081",sgB:"#2E3A2E",sgT:"#A8C0A5",te:"#E08868",teB:"#3D2A22",teT:"#E8A88A",am:"#D9A347",amB:"#3A2F1A",amT:"#E8C275",wa:"#7AAFD0",waB:"#1F2D3A",waT:"#9FC5DE"};
@@ -126,8 +126,47 @@ const COCINA_PLAN=[
     ],orden:""}
 ];
 
-const WATER_GOAL=2500;
-const TABS=[{id:"hoy",l:"Hoy",i:"💬"},{id:"plan",l:"Plan",i:"📅"},{id:"cocina",l:"Cocina",i:"🍳"},{id:"compras",l:"Compras",i:"🛒"}];
+// Frases diarias — rotan por día del año
+const FRASES=[
+  {txt:"El músculo no se construye en el gym. Se construye en la cocina y en el descanso.",autor:"Principio del entrenamiento"},
+  {txt:"La disciplina es elegir entre lo que quieres ahora y lo que más quieres.",autor:"Abraham Lincoln"},
+  {txt:"No tienes que ser extremo, solo consistente.",autor:"Mentalidad atlética"},
+  {txt:"Cada comida es una decisión. Cada decisión es un voto por la persona que quieres ser.",autor:"James Clear"},
+  {txt:"El ayuno no es castigo. Es darle al cuerpo el descanso que merece.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"La grasa no se fue de vacaciones. Tú tampoco puedes irte de vacaciones del plan.",autor:"Mentalidad atlética"},
+  {txt:"Un día malo no arruina el progreso. Rendirse sí.",autor:"Principio de consistencia"},
+  {txt:"Come para rendir, no para llenar un vacío.",autor:"Nutrición funcional"},
+  {txt:"La insulina alta es el enemigo silencioso. El ayuno es tu arma.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"Lo que haces hoy en la cocina determina lo que puedes hacer mañana en el gym.",autor:"Mentalidad atlética"},
+  {txt:"El progreso real es silencioso. Solo tú sabes lo que sacrificaste esta semana.",autor:"Anónimo"},
+  {txt:"No busques motivación. Construye hábitos. La motivación llega sola cuando ves resultados.",autor:"James Clear"},
+  {txt:"El metabolismo no miente. Si no baja el peso, algo en la alimentación está fallando.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"Cada entrenamiento al fallo es un mensaje que le envías a tu cuerpo: necesito más.",autor:"Principio de hipertrofia"},
+  {txt:"La proteína no es opcional. Es el material de construcción de quien quieres ser.",autor:"Nutrición funcional"},
+  {txt:"Dormir bien es tan importante como entrenar bien. Sin sueño no hay recuperación.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"El aguacate, el huevo, el aceite de oliva. Tus mejores aliados tienen más de mil años de historia.",autor:"Nutrición ancestral"},
+  {txt:"Confundir hambre con antojo es el error más común. Bebe agua primero.",autor:"Principio de nutrición"},
+  {txt:"El gym te da la forma. La cocina te da el resultado.",autor:"Mentalidad atlética"},
+  {txt:"No se trata de perfección. Se trata de no rendirse.",autor:"Principio de consistencia"},
+  {txt:"Tu cuerpo es el reflejo de tus decisiones de los últimos 90 días.",autor:"Nutrición funcional"},
+  {txt:"Entrenar duro y comer mal es como llenar un balde con huecos.",autor:"Mentalidad atlética"},
+  {txt:"El azúcar es adictiva por diseño. Reconocerlo es el primer paso para liberarte.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"La ventana de alimentación no es una dieta. Es respetar el ritmo natural del cuerpo.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"Cada kilo que pierdes es una historia de decisiones correctas acumuladas.",autor:"Principio de progreso"},
+  {txt:"La constancia vence al talento cuando el talento no es constante.",autor:"Anónimo"},
+  {txt:"No necesitas comer menos. Necesitas comer mejor.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"El batch cooking del domingo es el seguro de vida de la semana.",autor:"Nutrición práctica"},
+  {txt:"La grasa corporal almacenada es energía bloqueada. El ayuno es la llave.",autor:"Dr. Carlos Jaramillo"},
+  {txt:"Un cuerpo bien alimentado entrena diferente. Empieza por la cocina.",autor:"Mentalidad atlética"},
+  {txt:"Hoy es el día más importante de tu plan. Mañana también.",autor:"Principio de consistencia"},
+];
+
+function getFrase(){
+  const d=new Date();
+  const idx=(d.getFullYear()*366+d.getMonth()*31+d.getDate())%FRASES.length;
+  return FRASES[idx];
+}
+const TABS=[{id:"hoy",l:"Hoy",i:"🌿"},{id:"plan",l:"Plan",i:"📅"},{id:"cocina",l:"Cocina",i:"🍳"},{id:"compras",l:"Compras",i:"🛒"}];
 const DIAS_S=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 const DIAS_F=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 // Horarios base desde ventana inicio 8am — se desplazan con off
@@ -160,12 +199,26 @@ async function askAI(msg,hist,prof,wml){
 USUARIO:${prof.peso}kg·${prof.altura}cm·${OBJS[prof.objetivo].label}·Ventana:${prof.vS}:00-${(prof.vS+prof.vD)%24}:00·Agua:${wml}ml/2500ml·MetaProt:${prot}g/día
 REGLA JARAMILLO:blancas~25%·rojas~30%·huevo=6.5g·lentejas½t=9g·salmón170g=33.6g·pollo170g=37.8g·res170g=54g
 Sin azúcar/frituras/harinas. Verduras=base. Grasas buenas siempre. Gelatina sin sabor permitida en ventana.
-JSON sin markdown:{"type":"meal"|"workout"|"social"|"water"|"question"|"other","summary":"≤50chars","kcal_est":N,"prot_est":N,"ml":N,"feedback":"1-2 frases español con datos concretos"}`;
+Responde ÚNICAMENTE con este JSON, sin campos adicionales, sin markdown:
+{"type":"meal"|"workout"|"social"|"water"|"question"|"other","summary":"≤50chars","kcal_est":N,"prot_est":N,"ml":N,"feedback":"2-3 frases en español: qué hiciste bien, qué mejorar, dato concreto de proteína"}
+IMPORTANTE: solo estos 6 campos, nada más.`;
   const msgs=[...hist.slice(-4).map(m=>({role:m.r,content:m.c})),{role:"user",content:msg}];
   const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:400,system:sys,messages:msgs})});
   const data=await res.json();
-  const txt=(data.content||[]).map(c=>c.text||"").join("").replace(/```json|```/g,"").trim();
-  try{return JSON.parse(txt);}catch{return{type:"other",feedback:txt};}
+  const raw=(data.content||[]).map(c=>c.text||"").join("").trim();
+  // Extrae solo el primer objeto JSON válido, ignorando campos extra
+  const match=raw.match(/\{[\s\S]*?\}/);
+  try{
+    const parsed=JSON.parse(match?.[0]||raw.replace(/```json|```/g,"").trim());
+    return{
+      type:parsed.type||"other",
+      summary:parsed.summary||"",
+      kcal_est:parsed.kcal_est||0,
+      prot_est:parsed.prot_est||0,
+      ml:parsed.ml||0,
+      feedback:parsed.feedback||raw
+    };
+  }catch{return{type:"other",feedback:raw};}
 }
 
 function ProfEditor({c,p,onSave,onClose}){
@@ -241,43 +294,25 @@ function App(){
   const[diaIdx,setDiaIdx]=useState(todayIdx);
   const[prof,setProf]=useState(()=>ls("nc_profile",DP));
   const[logs,setLogs]=useState(()=>ls("nc_logs",{}));
-  const[chat,setChat]=useState(()=>ls("nc_chat",[]));
   const[water,setWater]=useState(()=>ls("nc_water",{}));
-  const[input,setInput]=useState("");
-  const[busy,setBusy]=useState(false);
   const[chk,setChk]=useState(()=>ls("nc_chk",{}));
   const[editing,setEditing]=useState(false);
-  const chatRef=useRef(null);
 
   useEffect(()=>{const mq=window.matchMedia("(prefers-color-scheme: dark)");setC(mq.matches?D:L);mq.addEventListener("change",e=>setC(e.matches?D:L));},[]);
   useEffect(()=>ss("nc_profile",prof),[prof]);
   useEffect(()=>ss("nc_logs",logs),[logs]);
-  useEffect(()=>ss("nc_chat",chat.slice(-20)),[chat]);
   useEffect(()=>ss("nc_water",water),[water]);
   useEffect(()=>ss("nc_chk",chk),[chk]);
-  useEffect(()=>{if(chatRef.current)chatRef.current.scrollTop=chatRef.current.scrollHeight;},[chat,busy]);
 
   const TK=tk(),todayLogs=logs[TK]||[],todayWater=water[TK]||0,obj=OBJS[prof.objetivo],dayData=PLAN[diaIdx];
-  const off=prof.vS-8; // offset desde ventana base 8am
+  const off=prof.vS-8;
+  const frase=getFrase(); // offset desde ventana base 8am
 
   function planTime(diaI,comidaI){
     const base=BASE_T[diaI]?.[comidaI]||"08:00";
     return shiftT(base,off);
   }
   function addWater(ml){setWater(p=>({...p,[TK]:(p[TK]||0)+ml}));}
-
-  async function send(txt){
-    const t=(txt||input).trim();if(!t||busy)return;
-    setInput("");setChat(prev=>[...prev,{r:"user",c:t}]);setBusy(true);
-    try{
-      const res=await askAI(t,chat,prof,todayWater);
-      setChat(prev=>[...prev,{r:"assistant",c:res.feedback||"Listo.",d:res}]);
-      if(["meal","workout","social"].includes(res.type))
-        setLogs(p=>({...p,[TK]:[...(p[TK]||[]),{id:Date.now(),type:res.type,summary:res.summary,kcal:res.kcal_est,prot:res.prot_est,time:new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"})}]}));
-      else if(res.type==="water"&&res.ml)addWater(res.ml);
-    }catch{setChat(prev=>[...prev,{r:"assistant",c:"Error al conectar. Intenta de nuevo.",err:true}]);}
-    finally{setBusy(false);}
-  }
 
   async function shareList(){
     const pending=COMPRAS.map((cat,ci)=>{const its=cat.items.filter((_,ii)=>!chk[`${ci}-${ii}`]);return its.length?`${cat.cat}:\n${its.map(i=>`  • ${i}`).join("\n")}`:null;}).filter(Boolean).join("\n\n");
@@ -324,25 +359,12 @@ function App(){
               :<p style={{margin:0,fontSize:11,color:c.tt,fontStyle:"italic"}}>Sin registros aún</p>}
           </div>
           <Water c={c} ml={todayWater} onAdd={addWater} onReset={()=>setWater(p=>({...p,[TK]:0}))}/>
-          <div style={{background:c.bgC,border:`0.5px solid ${c.bo}`,borderRadius:13,overflow:"hidden"}}>
-            <div style={{padding:"7px 11px",borderBottom:`0.5px solid ${c.bs}`,display:"flex",alignItems:"center",gap:6}}>
-              <div style={{width:6,height:6,borderRadius:"50%",background:c.sg}}/><span style={{fontSize:12,fontWeight:500}}>Coach IA</span>
-              <span style={{fontSize:9,color:c.tt,marginLeft:"auto"}}>comidas · entrenos · agua</span>
-            </div>
-            <div ref={chatRef} style={{maxHeight:240,overflowY:"auto",padding:10,display:"flex",flexDirection:"column",gap:7}}>
-              {chat.length===0&&<div style={{padding:"10px 4px",textAlign:"center"}}><p style={{fontSize:26,margin:"0 0 4px"}}>🌿</p><p style={{margin:"0 0 8px",fontSize:11,color:c.ts}}>Cuéntame tu día</p><div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center"}}>{["Comí 2 huevos con aguacate","Hice pecho al fallo","Tomé medio litro agua"].map(s=><button key={s} onClick={()=>send(s)} style={{fontSize:10,padding:"4px 7px",borderRadius:12,border:`0.5px solid ${c.bo}`,background:c.bgS,color:c.ts,cursor:"pointer"}}>{s}</button>)}</div></div>}
-              {chat.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.r==="user"?"flex-end":"flex-start"}}><div style={{maxWidth:"80%",background:m.r==="user"?c.sg:(m.err?c.teB:c.bgS),color:m.r==="user"?"#fff":(m.err?c.teT:c.tx),padding:"7px 10px",borderRadius:11,borderBottomRightRadius:m.r==="user"?3:11,borderBottomLeftRadius:m.r==="user"?11:3,fontSize:12,lineHeight:1.5}}>
-                {m.c}
-                {m.d&&["meal","workout","social","water"].includes(m.d.type)&&<div style={{marginTop:4,paddingTop:4,borderTop:`0.5px solid rgba(255,255,255,.15)`,fontSize:9,opacity:.85}}>✓ {m.d.type==="water"?`+${m.d.ml}ml agua`:`${m.d.summary}${m.d.kcal_est?` · ${m.d.kcal_est}kcal`:""}${m.d.prot_est?` · ${m.d.prot_est}g prot.`:""}`}</div>}
-              </div></div>)}
-              {busy&&<div style={{display:"flex"}}><div style={{background:c.bgS,padding:"6px 10px",borderRadius:10,fontSize:11,color:c.ts}}>Pensando...</div></div>}
-            </div>
-            <div style={{borderTop:`0.5px solid ${c.bs}`,padding:7,display:"flex",gap:6,background:c.bgM}}>
-              <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Comí, entrené, tomé..." disabled={busy} style={{flex:1,padding:"7px 9px",fontSize:12,borderRadius:8,border:`0.5px solid ${c.bo}`,background:c.bgC,color:c.tx,outline:"none",fontFamily:"inherit"}}/>
-              <button onClick={()=>send()} disabled={busy||!input.trim()} style={{padding:"0 12px",fontSize:14,borderRadius:8,border:"none",background:input.trim()&&!busy?c.sg:c.bgS,color:input.trim()&&!busy?"#fff":c.tt,cursor:input.trim()&&!busy?"pointer":"not-allowed"}}>→</button>
-            </div>
+          {/* Frase del día */}
+          <div style={{background:c.sgB,border:`0.5px solid ${c.sg}`,borderRadius:13,padding:16,marginBottom:4}}>
+            <p style={{margin:"0 0 8px",fontSize:10,color:c.sgT,fontWeight:500,letterSpacing:.5,textTransform:"uppercase"}}>💬 Hoy</p>
+            <p style={{margin:"0 0 10px",fontSize:14,color:c.sgT,lineHeight:1.6,fontStyle:"italic"}}>"{frase.txt}"</p>
+            <p style={{margin:0,fontSize:10,color:c.sg,fontWeight:500}}>— {frase.autor}</p>
           </div>
-          {chat.length>0&&<button onClick={()=>setChat([])} style={{marginTop:5,fontSize:10,color:c.tt,background:"transparent",border:"none",cursor:"pointer",padding:3}}>Limpiar chat</button>}
         </div>}
 
         {/* PLAN */}
